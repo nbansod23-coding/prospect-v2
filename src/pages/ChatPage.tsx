@@ -22,7 +22,7 @@ const SUGGESTIONS = [
   { label: "Healthcare leads in Mumbai",    icon: Search,           query: "Find 5 healthcare companies in Mumbai" },
   { label: "Pharma targets in Bengaluru",   icon: Handshake,        query: "Find pharmaceutical companies in Bengaluru" },
   { label: "500+ employee companies",       icon: Users,            query: "Find 8 SaaS companies with over 500 employees" },
-  { label: "Tech firms in Pune",            icon: BriefcaseBusiness,query: "Find technology companies in Pune" },
+  { label: "Pharma firms in Pune",          icon: BriefcaseBusiness,query: "Find HealthCare companies in Pune" },
 ];
 
 export default function ChatPage() {
