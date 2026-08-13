@@ -219,7 +219,7 @@ export default function ChatPage() {
             </div>
           ) : (
             /* ── Chat messages ── */
-            <div className="mx-auto w-full max-w-[800px] space-y-5 px-4 py-7 sm:px-6">
+            <div className="mx-auto w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {/* Mobile export buttons */}
               <div className="md:hidden">
                 <ChatExportButtons
@@ -237,7 +237,7 @@ export default function ChatPage() {
                 >
                   {msg.role === "assistant" && (
                     <div
-                      className="mr-2.5 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm"
+                      className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm"
                       style={{ background: "var(--color-primary)" }}
                     >
                       AI
@@ -246,10 +246,10 @@ export default function ChatPage() {
 
                   <div
                     className={[
-                      "max-w-[72%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                      "rounded-2xl px-4 py-3 text-sm leading-relaxed",
                       msg.role === "user"
-                        ? "rounded-br-sm text-white shadow-sm"
-                        : "rounded-bl-sm border bg-white shadow-sm",
+                        ? "max-w-[min(72%,560px)] rounded-br-sm text-white shadow-sm"
+                        : "min-w-0 flex-1 rounded-bl-sm border bg-white shadow-sm",
                     ].join(" ")}
                     style={
                       msg.role === "user"
@@ -261,20 +261,18 @@ export default function ChatPage() {
                   </div>
 
                   {msg.role === "user" && (
-                    <div className="ml-2.5 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white shadow-sm">
+                    <div className="ml-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white shadow-sm">
                       P
                     </div>
                   )}
                 </div>
               ))}
 
-              {/* Results card */}
               {!loading && activeResult && (
-                <div className="animate-fade-in">
+                <div className="w-full animate-fade-in pl-11">
                   <ResultsCard
                     prospects={activeResult.prospects}
                     query={activeChat!.messages.find((m) => m.role === "user")?.content ?? ""}
-                    summary={activeResult.summary}
                     industry={activeResult.industry}
                     location={activeResult.location}
                   />

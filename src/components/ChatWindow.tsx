@@ -50,12 +50,12 @@ export default function ChatWindow({ messages, isProcessing, onSuggestion }: Pro
         {messages.length === 0 ? (
           <EmptyState onSuggestion={onSuggestion} />
         ) : (
-          <div className="mx-auto max-w-[860px] space-y-5 px-4 py-8 md:px-6">
+          <div className="mx-auto w-full space-y-5 px-4 py-8 sm:px-6 lg:px-8">
             {messages.map((msg) => (
               <div key={msg.id}>
                 <MessageBubble role={msg.role} content={msg.content} />
                 {msg.prospects && msg.prospects.length > 0 && (
-                  <div className="ml-11">
+                  <div className="w-full">
                     <ResultsCard
                       prospects={msg.prospects}
                       query={msg.query ?? ""}

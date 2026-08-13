@@ -29,9 +29,9 @@ export default function PromptInput({ onSubmit, disabled = false }: Props) {
   }
 
   return (
-    <div className="w-full px-3 pb-3 pt-2 sm:px-5 sm:pb-4">
-      <form
-        className="mx-auto max-w-[800px]"
+    <div className="w-full px-4 pb-3 pt-2 sm:px-6 sm:pb-4 lg:px-8">
+        <form
+        className="mx-auto w-full"
         onSubmit={(e) => { e.preventDefault(); submit(); }}
       >
         {/* Main container */}

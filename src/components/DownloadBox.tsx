@@ -50,9 +50,7 @@ export default function DownloadBox({
   };
 
   return (
-    <div
-      className="mx-auto mb-3 w-full max-w-[800px] px-4 sm:px-6"
-    >
+    <div className="mx-auto mb-3 w-full px-4 sm:px-6 lg:px-8">
       <div
         className="rounded-2xl border bg-white px-5 py-4 shadow-sm"
         style={{

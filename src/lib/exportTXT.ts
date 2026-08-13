@@ -42,6 +42,7 @@ export function downloadProspectsAsText(prospects: Prospect[], query: string): v
     lines.push(`   Location:  ${p.location}`);
     lines.push(`   Website:   ${p.website}`);
     lines.push(`   Contact:   ${p.contactName} (${p.contactTitle})`);
+    lines.push(`   Phone:     ${p.contactPhone}`);
     lines.push(`   Email:     ${p.contactEmail}`);
     lines.push("");
   });

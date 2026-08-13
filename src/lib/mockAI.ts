@@ -64,7 +64,9 @@ export async function generateMockResponse(query: string): Promise<MockAIResult>
   const location = detectLocation(query);
 
   let filtered = filterProspects(industry, location);
-  if (filtered.length === 0) filtered = [...mockProspects];
+  if (filtered.length === 0 && !industry && !location) {
+    filtered = [...mockProspects];
+  }
 
   const prospects = filtered.slice(0, limit);
 

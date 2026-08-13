@@ -18,23 +18,27 @@ export function downloadPDF(prospects: Prospect[], query: string): void {
 
   autoTable(doc, {
     startY: 42,
-    head: [["Company", "Industry", "Employees", "Location", "Website"]],
+    head: [["Company", "Industry", "Employees", "Location", "Contact", "Phone", "Website"]],
     body: prospects.map((p) => [
       p.company,
       p.industry,
       p.employees.toLocaleString(),
       p.location,
+      p.contactName,
+      p.contactPhone,
       p.website,
     ]),
     styles: { fontSize: 8 },
     headStyles: { fillColor: [102, 135, 220] },
     theme: "grid",
     columnStyles: {
-      0: { cellWidth: 42 },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 25 },
-      3: { cellWidth: 40 },
-      4: { cellWidth: 70 },
+      0: { cellWidth: 36 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 36 },
+      5: { cellWidth: 36 },
+      6: { cellWidth: 50 },
     },
   });
 

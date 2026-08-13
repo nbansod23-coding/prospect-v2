@@ -1,4 +1,4 @@
-import { Building2, Globe, MapPin, Sparkles, Users } from "lucide-react";
+import { Building2, Globe, MapPin, Phone, Sparkles, Users } from "lucide-react";
 import type { Prospect } from "@/data/mockData";
 import DownloadButtons from "./DownloadButtons";
 
@@ -14,7 +14,7 @@ export default function ResultsCard({ prospects, query, summary, industry, locat
   if (prospects.length === 0) return null;
 
   return (
-    <div className="mt-4 w-full animate-fade-in overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+    <div className="mt-3 w-full animate-fade-in overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
       {/* ── Header ── */}
       <div className="border-b border-zinc-100 p-4 md:p-5">
         <div className="flex items-start justify-between gap-4">
@@ -65,7 +65,7 @@ export default function ResultsCard({ prospects, query, summary, industry, locat
 
       {/* ── Table ── */}
       <div className="overflow-x-auto">
-        <table className="min-w-[720px] w-full text-sm">
+        <table className="w-full min-w-[920px] text-sm">
           <thead>
             <tr className="border-b border-zinc-100 bg-zinc-50/60">
               {["Company", "Industry", "Employees", "Location", "Website", "Contact"].map((h) => (
@@ -131,11 +131,17 @@ export default function ResultsCard({ prospects, query, summary, industry, locat
                   </a>
                 </td>
 
-                {/* Contact */}
+                {/* Contact — name + phone */}
                 <td className="px-4 py-3">
                   <div className="text-xs">
                     <p className="font-medium text-zinc-700">{p.contactName}</p>
                     <p className="text-zinc-400">{p.contactTitle}</p>
+                    {p.contactPhone && (
+                      <p className="mt-1 flex items-center gap-1.5 text-zinc-600">
+                        <Phone size={11} className="shrink-0 text-zinc-400" />
+                        <span className="tabular-nums">{p.contactPhone}</span>
+                      </p>
+                    )}
                   </div>
                 </td>
               </tr>

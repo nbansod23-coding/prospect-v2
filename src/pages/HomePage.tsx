@@ -26,6 +26,8 @@ type ChatMessage = {
   prospects?: Prospect[];
   query?: string;
   reasoning?: string;
+  industry?: string | null;
+  location?: string | null;
 };
 
 type Chat = { id: string; title: string; messages: ChatMessage[] };
@@ -99,6 +101,8 @@ export default function HomePage() {
         content: result.summary,
         prospects: result.prospects,
         query,
+        industry: result.industry,
+        location: result.location,
         reasoning: `I understood your request as: "${query}". I searched for matching prospects and organized the most relevant results for you.`,
       };
 
@@ -230,32 +234,30 @@ export default function HomePage() {
             </div>
           ) : (
             /* ── Chat messages ── */
-            <div className="mx-auto w-full max-w-[800px] space-y-5 px-4 py-7 sm:px-6">
+            <div className="mx-auto w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {messages.map((msg) => (
-                <div key={msg.id}>
+                <div key={msg.id} className="w-full">
                   <div
                     className={[
                       "flex w-full animate-fade-in",
                       msg.role === "user" ? "justify-end" : "justify-start",
                     ].join(" ")}
                   >
-                    {/* AI avatar */}
                     {msg.role === "assistant" && (
                       <div
-                        className="mr-2.5 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm"
+                        className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm"
                         style={{ background: "var(--color-primary)" }}
                       >
                         AI
                       </div>
                     )}
 
-                    {/* Bubble */}
                     <div
                       className={[
-                        "max-w-[72%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                        "rounded-2xl px-4 py-3 text-sm leading-relaxed",
                         msg.role === "user"
-                          ? "rounded-br-sm text-white shadow-sm"
-                          : "rounded-bl-sm border bg-white shadow-sm",
+                          ? "max-w-[min(72%,560px)] rounded-br-sm text-white shadow-sm"
+                          : "min-w-0 flex-1 rounded-bl-sm border bg-white shadow-sm",
                       ].join(" ")}
                       style={
                         msg.role === "user"
@@ -266,7 +268,6 @@ export default function HomePage() {
                             }
                       }
                     >
-                      {/* {msg.content} */}
                       {msg.reasoning && (
                         <div
                           className="mb-3 rounded-xl border px-3 py-2.5"
@@ -301,23 +302,22 @@ export default function HomePage() {
                       <div>{msg.content}</div>
                     </div>
 
-                    {/* User avatar */}
                     {msg.role === "user" && (
-                      <div className="ml-2.5 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white shadow-sm">
+                      <div className="ml-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white shadow-sm">
                         P
                       </div>
                     )}
                   </div>
 
-                  {/* Results card — below assistant message */}
                   {msg.role === "assistant" &&
                     msg.prospects &&
                     msg.prospects.length > 0 && (
-                      <div className="ml-[38px] mt-3 animate-fade-in">
+                      <div className="mt-3 w-full animate-fade-in pl-11">
                         <ResultsCard
                           prospects={msg.prospects}
                           query={msg.query ?? ""}
-                          summary={undefined}
+                          industry={msg.industry}
+                          location={msg.location}
                         />
                       </div>
                     )}

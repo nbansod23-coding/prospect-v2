@@ -6,9 +6,29 @@ function escape(v: string | number): string {
 }
 
 export function downloadCSV(prospects: Prospect[]): void {
-  const headers = ["Company", "Industry", "Employees", "Location", "Website", "Description"];
+  const headers = [
+    "Company",
+    "Industry",
+    "Employees",
+    "Location",
+    "Website",
+    "Contact Name",
+    "Contact Title",
+    "Phone",
+    "Email",
+    "Description",
+  ];
   const rows = prospects.map((p) => [
-    p.company, p.industry, p.employees, p.location, p.website, p.description,
+    p.company,
+    p.industry,
+    p.employees,
+    p.location,
+    p.website,
+    p.contactName,
+    p.contactTitle,
+    p.contactPhone,
+    p.contactEmail,
+    p.description,
   ]);
   const csv = [headers, ...rows].map((r) => r.map(escape).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

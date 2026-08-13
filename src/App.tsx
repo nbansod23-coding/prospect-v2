@@ -10,7 +10,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/chat"             element={<HomePage />} />
+        <Route path="/"             element={<HomePage />} />
         <Route path="/chat"         element={<ChatPage />} />
         <Route path="/chat-history" element={<ChatHistoryPage />} />
         <Route path="/lists"        element={<ListsPage />} />
