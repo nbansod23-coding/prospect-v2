@@ -343,10 +343,12 @@ export default function ChatPage() {
           className="shrink-0 border-t"
           style={{ borderColor: "var(--color-border-light)", background: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)" }}
         >
-          {exportProspects.length > 0 && (
-            <DownloadBox prospects={exportProspects} query={lastQuery} />
-          )}
-          <PromptInput onSubmit={handleSubmit} disabled={loading} />
+          <div className="px-4 pt-3 pb-3 sm:px-6 sm:pb-4 lg:px-8">
+            {exportProspects.length > 0 && (
+              <DownloadBox prospects={exportProspects} query={lastQuery} />
+            )}
+            <PromptInput onSubmit={handleSubmit} disabled={loading} />
+          </div>
         </div>
       </main>
     </div>

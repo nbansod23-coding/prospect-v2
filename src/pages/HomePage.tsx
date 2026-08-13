@@ -403,14 +403,16 @@ export default function HomePage() {
             backdropFilter: "blur(12px)",
           }}
         >
-          {exportProspects.length > 0 && (
-            <DownloadBox
-              prospects={exportProspects}
-              query={lastAssistantMessage?.query ?? ""}
-            />
-          )}
+          <div className="px-4 pt-3 pb-3 sm:px-6 sm:pb-4 lg:px-8">
+            {exportProspects.length > 0 && (
+              <DownloadBox
+                prospects={exportProspects}
+                query={lastAssistantMessage?.query ?? ""}
+              />
+            )}
 
-          <PromptInput onSubmit={handleSubmit} disabled={isProcessing} />
+            <PromptInput onSubmit={handleSubmit} disabled={isProcessing} />
+          </div>
         </div>
       </section>
 

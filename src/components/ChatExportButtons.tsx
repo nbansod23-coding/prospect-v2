@@ -25,27 +25,30 @@ function downloadJSON(messages: StoredMessage[], title: string) {
   URL.revokeObjectURL(url);
 }
 
+const btn =
+  "rounded border border-blue-200 bg-white px-1.5 py-0.5 text-[10px] font-medium leading-none text-zinc-600 transition hover:bg-blue-50";
+
 export default function ChatExportButtons({ messages, chatTitle, prospects = [], query = "" }: Props) {
   if (messages.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-      <span className="flex items-center gap-1.5 text-xs font-medium text-blue-700">
-        <Download size={13} />
+    <div className="flex flex-nowrap items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-1.5 py-1">
+      <span className="flex items-center gap-1 text-[10px] font-medium text-blue-700">
+        <Download size={10} />
         Export chat:
       </span>
 
       <button
         type="button"
         onClick={() => downloadChatAsText(messages, chatTitle)}
-        className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-blue-50"
+        className={btn}
       >
         TXT
       </button>
       <button
         type="button"
         onClick={() => downloadJSON(messages, chatTitle)}
-        className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-blue-50"
+        className={btn}
       >
         JSON
       </button>
@@ -55,14 +58,14 @@ export default function ChatExportButtons({ messages, chatTitle, prospects = [],
           <button
             type="button"
             onClick={() => downloadPDF(prospects, query)}
-            className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-blue-50"
+            className={btn}
           >
             PDF
           </button>
           <button
             type="button"
             onClick={() => downloadCSV(prospects)}
-            className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 transition hover:bg-blue-50"
+            className={btn}
           >
             CSV
           </button>

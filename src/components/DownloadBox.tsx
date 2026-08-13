@@ -13,7 +13,7 @@ type DownloadBoxProps = {
 };
 
 const menuItem =
-  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[#334b6b] transition-colors duration-150 hover:bg-[#17345e] hover:text-white";
+  "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[12px] text-[#334b6b] transition-colors duration-150 hover:bg-[#17345e] hover:text-white";
 
 export default function DownloadBox({
   prospects,
@@ -45,25 +45,25 @@ export default function DownloadBox({
   }
 
   return (
-    <div className="mx-auto mb-3 w-full px-4 sm:px-6 lg:px-8">
+    <div className="mb-2.5 w-full">
       <div
-        className="rounded-2xl border bg-white px-5 py-4 shadow-sm"
+        className="rounded-xl border bg-white px-4 py-3 shadow-sm"
         style={{ borderColor: "var(--color-border)" }}
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h3
-              className="truncate text-sm font-semibold"
+              className="truncate text-[13px] font-semibold leading-tight"
               style={{ color: "var(--color-text-body)" }}
             >
               {title}
             </h3>
-            <p className="mt-1 text-xs" style={{ color: "var(--color-text-muted)" }}>
+            <p className="mt-0.5 text-[11px] leading-tight" style={{ color: "var(--color-text-muted)" }}>
               Your list is ready!
             </p>
           </div>
 
-          <span className="shrink-0 text-xs" style={{ color: "var(--color-text-muted)" }}>
+          <span className="shrink-0 text-[11px]" style={{ color: "var(--color-text-muted)" }}>
             {new Date().toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -72,23 +72,23 @@ export default function DownloadBox({
           </span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
           <div className="relative" ref={menuRef}>
             <div className="flex overflow-hidden rounded-full shadow-sm">
               <button
                 type="button"
                 onClick={() => downloadCSV(prospects)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium text-white transition hover:opacity-90"
                 style={{ background: "var(--color-primary)" }}
               >
-                <Download size={15} />
+                <Download size={13} />
                 Download {prospects.length} rows
               </button>
 
               <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center justify-center border-l px-3 text-white transition hover:opacity-90"
+                className="flex items-center justify-center border-l px-2 text-white transition hover:opacity-90"
                 style={{
                   background: "var(--color-primary)",
                   borderColor: "rgba(255,255,255,0.3)",
@@ -97,7 +97,7 @@ export default function DownloadBox({
                 aria-expanded={open}
               >
                 <ChevronDown
-                  size={16}
+                  size={14}
                   className={["transition-transform duration-150", open ? "rotate-180" : ""].join(" ")}
                 />
               </button>
@@ -105,7 +105,7 @@ export default function DownloadBox({
 
             {open && (
               <div
-                className="absolute bottom-full left-0 z-20 mb-2 min-w-[160px] overflow-hidden rounded-xl border bg-white py-1 shadow-[0_8px_32px_rgba(23,52,94,0.14)]"
+                className="absolute bottom-full left-0 z-20 mb-1.5 min-w-[140px] overflow-hidden rounded-lg border bg-white py-1 shadow-[0_8px_32px_rgba(23,52,94,0.14)]"
                 style={{ borderColor: "var(--color-border)" }}
               >
                 <button
@@ -113,7 +113,7 @@ export default function DownloadBox({
                   className={menuItem}
                   onClick={() => closeAnd(() => downloadPDF(prospects, query))}
                 >
-                  <FileText size={14} />
+                  <FileText size={13} />
                   PDF
                 </button>
                 <button
@@ -121,7 +121,7 @@ export default function DownloadBox({
                   className={menuItem}
                   onClick={() => closeAnd(() => downloadCSV(prospects))}
                 >
-                  <Table size={14} />
+                  <Table size={13} />
                   CSV
                 </button>
                 <button
@@ -129,7 +129,7 @@ export default function DownloadBox({
                   className={menuItem}
                   onClick={() => closeAnd(() => downloadJSON(prospects))}
                 >
-                  <span className="w-[14px] text-center font-mono text-[11px]">{"{ }"}</span>
+                  <span className="w-[13px] text-center font-mono text-[10px]">{"{ }"}</span>
                   JSON
                 </button>
               </div>
@@ -138,11 +138,11 @@ export default function DownloadBox({
 
           <button
             type="button"
-            className="flex items-center gap-2 text-sm font-medium transition hover:underline"
+            className="flex items-center gap-1.5 text-[12px] font-medium transition hover:underline"
             style={{ color: "var(--color-primary)" }}
             onClick={() => navigate("/lists")}
           >
-            <ExternalLink size={15} />
+            <ExternalLink size={13} />
             Open in Lists
           </button>
         </div>
