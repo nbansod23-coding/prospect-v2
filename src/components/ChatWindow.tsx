@@ -99,7 +99,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (q: string) => void }) {
               key={label}
               type="button"
               onClick={() => onSuggestion(query)}
-              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-4 py-2 text-sm text-zinc-600 shadow-sm transition hover:border-[#6687dc]/40 hover:bg-white hover:text-[#17345e]"
+              className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-4 py-2 text-sm text-zinc-600 shadow-sm transition hover:border-[#6687dc]/40 hover:bg-white hover:text-[#17345e] hover:shadow-md active:scale-[0.98] active:bg-[#f0f5ff]"
             >
               <Icon size={14} className="text-zinc-400" />
               {label}

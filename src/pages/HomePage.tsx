@@ -50,18 +50,46 @@ export default function HomePage() {
   const [activeChatId, setActiveChatId] = useState(INITIAL_ID);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
 
   const activeChat = chats.find((c) => c.id === activeChatId);
   const messages = activeChat?.messages ?? [];
   const hasMessages = messages.length > 0;
 
+  const lastAssistantMessage = [...messages]
+    .reverse()
+    .find(
+      (message) =>
+        message.role === "assistant" &&
+        message.prospects &&
+        message.prospects.length > 0,
+    );
+  const lastProspects = lastAssistantMessage?.prospects ?? [];
+  const exportProspects =
+    selectedIds.length > 0
+      ? lastProspects.filter((p) => selectedIds.includes(p.id))
+      : lastProspects;
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function toggleAll() {
+    const ids = lastProspects.map((p) => p.id);
+    setSelectedIds((prev) => (prev.length === ids.length ? [] : ids));
+  }
+
   function handleNewChat() {
     setActiveChatId(INITIAL_ID);
+    setSelectedIds([]);
   }
 
   function handleSelectChat(id: string) {
     setActiveChatId(id);
+    setSelectedIds([]);
     setSidebarOpen(false);
   }
 
@@ -69,6 +97,7 @@ export default function HomePage() {
     if (!query.trim() || isProcessing) return;
 
     setIsProcessing(true);
+    setSelectedIds([]);
 
     let chatId = activeChatId;
     if (chatId === INITIAL_ID) {
@@ -220,7 +249,7 @@ export default function HomePage() {
                     key={label}
                     type="button"
                     onClick={() => handleSubmit(query)}
-                    className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:shadow-md"
+                    className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:border-[#6687dc]/40 hover:bg-[#f0f5ff] hover:text-[#17345e] hover:shadow-md active:scale-[0.98] active:bg-[#e0e8ff]"
                     style={{
                       borderColor: "var(--color-border)",
                       color: "var(--color-text-body)",
@@ -318,6 +347,15 @@ export default function HomePage() {
                           query={msg.query ?? ""}
                           industry={msg.industry}
                           location={msg.location}
+                          selectedIds={
+                            msg.id === lastAssistantMessage?.id ? selectedIds : undefined
+                          }
+                          onToggleSelect={
+                            msg.id === lastAssistantMessage?.id ? toggleSelect : undefined
+                          }
+                          onToggleAll={
+                            msg.id === lastAssistantMessage?.id ? toggleAll : undefined
+                          }
                         />
                       </div>
                     )}
@@ -365,25 +403,12 @@ export default function HomePage() {
             backdropFilter: "blur(12px)",
           }}
         >
-          {/* Download box */}
-          {hasMessages &&
-            (() => {
-              const lastAssistantMessage = [...messages]
-                .reverse()
-                .find(
-                  (message) =>
-                    message.role === "assistant" &&
-                    message.prospects &&
-                    message.prospects.length > 0,
-                );
-
-              return lastAssistantMessage?.prospects ? (
-                <DownloadBox
-                  prospects={lastAssistantMessage.prospects}
-                  title="prospecting_results"
-                />
-              ) : null;
-            })()}
+          {exportProspects.length > 0 && (
+            <DownloadBox
+              prospects={exportProspects}
+              query={lastAssistantMessage?.query ?? ""}
+            />
+          )}
 
           <PromptInput onSubmit={handleSubmit} disabled={isProcessing} />
         </div>

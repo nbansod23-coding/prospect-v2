@@ -6,6 +6,7 @@ import ChatHeader from "@/components/ChatHeader";
 import PromptInput from "@/components/PromptInput";
 import ResultsCard from "@/components/ResultsCard";
 import ChatExportButtons from "@/components/ChatExportButtons";
+import DownloadBox from "@/components/DownloadBox";
 import {
   createChat,
   getChats,
@@ -34,6 +35,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   useEffect(() => {
     const idParam = searchParams.get("id");
@@ -43,11 +45,13 @@ export default function ChatPage() {
         setChats(getChats());
         setActiveChatId(found.id);
         setActiveResult(found.result);
+        setSelectedIds([]);
         return;
       }
     }
     setActiveChatId("");
     setActiveResult(null);
+    setSelectedIds([]);
   }, [searchParams]);
 
   useEffect(() => {
@@ -56,10 +60,28 @@ export default function ChatPage() {
 
   const activeChat = chats.find((c) => c.id === activeChatId) ?? null;
   const hasMessages = activeChat && activeChat.messages.length > 0;
+  const lastProspects = activeResult?.prospects ?? [];
+  const exportProspects =
+    selectedIds.length > 0
+      ? lastProspects.filter((p) => selectedIds.includes(p.id))
+      : lastProspects;
+  const lastQuery = activeChat?.messages.find((m) => m.role === "user")?.content ?? "";
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function toggleAll() {
+    const ids = lastProspects.map((p) => p.id);
+    setSelectedIds((prev) => (prev.length === ids.length ? [] : ids));
+  }
 
   function handleNewChat() {
     setActiveChatId("");
     setActiveResult(null);
+    setSelectedIds([]);
     setSidebarOpen(false);
   }
 
@@ -68,6 +90,7 @@ export default function ChatPage() {
     if (!chat) return;
     setActiveChatId(id);
     setActiveResult(chat.result);
+    setSelectedIds([]);
     setSidebarOpen(false);
   }
 
@@ -78,6 +101,7 @@ export default function ChatPage() {
 
       setLoading(true);
       setActiveResult(null);
+      setSelectedIds([]);
 
       let chat = activeChat;
 
@@ -205,7 +229,7 @@ export default function ChatPage() {
                     key={label}
                     type="button"
                     onClick={() => handleSubmit(query)}
-                    className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:shadow-md"
+                    className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:border-[#6687dc]/40 hover:bg-[#f0f5ff] hover:text-[#17345e] hover:shadow-md active:scale-[0.98] active:bg-[#e0e8ff]"
                     style={{
                       borderColor: "var(--color-border)",
                       color: "var(--color-text-body)",
@@ -272,9 +296,12 @@ export default function ChatPage() {
                 <div className="w-full animate-fade-in pl-11">
                   <ResultsCard
                     prospects={activeResult.prospects}
-                    query={activeChat!.messages.find((m) => m.role === "user")?.content ?? ""}
+                    query={lastQuery}
                     industry={activeResult.industry}
                     location={activeResult.location}
+                    selectedIds={selectedIds}
+                    onToggleSelect={toggleSelect}
+                    onToggleAll={toggleAll}
                   />
                 </div>
               )}
@@ -316,6 +343,9 @@ export default function ChatPage() {
           className="shrink-0 border-t"
           style={{ borderColor: "var(--color-border-light)", background: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)" }}
         >
+          {exportProspects.length > 0 && (
+            <DownloadBox prospects={exportProspects} query={lastQuery} />
+          )}
           <PromptInput onSubmit={handleSubmit} disabled={loading} />
         </div>
       </main>

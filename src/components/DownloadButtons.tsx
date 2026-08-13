@@ -1,52 +1,44 @@
 import { Download, FileText, Table } from "lucide-react";
 import type { Prospect } from "@/data/mockData";
 import { downloadCSV } from "@/lib/exportCSV";
+import { downloadJSON } from "@/lib/exportJSON";
 import { downloadPDF } from "@/lib/exportPDF";
 
-type Props = { prospects: Prospect[]; query: string };
+type Props = {
+  prospects: Prospect[];
+  query: string;
+};
 
-function downloadJSON(prospects: Prospect[]) {
-  const blob = new Blob([JSON.stringify(prospects, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "prospect-results.json";
-  a.click();
-  URL.revokeObjectURL(url);
-}
+const btn =
+  "flex items-center gap-1.5 rounded-lg border border-[#d8e1ed] bg-white px-3 py-1.5 text-xs font-medium text-[#334b6b] transition-all duration-150 hover:border-[#17345e] hover:bg-[#17345e] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6687dc]/45 focus-visible:ring-offset-1";
 
-export default function DownloadButtons({ prospects, query }: Props) {
+export default function DownloadButtons({
+  prospects,
+  query,
+}: Props) {
   if (prospects.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="hidden items-center gap-1.5 text-xs text-zinc-400 sm:inline-flex">
-        <Download size={13} />
-        {prospects.length} records
+    <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
+      <span className="flex items-center gap-1.5 text-xs font-medium tabular-nums text-zinc-500">
+        <Download size={13} className="shrink-0 text-[#6687dc]" />
+        {prospects.length} record{prospects.length !== 1 ? "s" : ""}
       </span>
 
-      <button
-        type="button"
-        onClick={() => downloadPDF(prospects, query)}
-        className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-700"
-      >
+      <span className="hidden h-3.5 w-px bg-zinc-200 sm:block" aria-hidden />
+
+      <button type="button" onClick={() => downloadPDF(prospects, query)} className={btn}>
         <FileText size={12} />
         PDF
       </button>
-      <button
-        type="button"
-        onClick={() => downloadCSV(prospects)}
-        className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
-      >
+
+      <button type="button" onClick={() => downloadCSV(prospects)} className={btn}>
         <Table size={12} />
         CSV
       </button>
-      <button
-        type="button"
-        onClick={() => downloadJSON(prospects)}
-        className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
-      >
-        {"{ }"}
+
+      <button type="button" onClick={() => downloadJSON(prospects)} className={btn}>
+        <span className="font-mono text-[11px] leading-none">{"{ }"}</span>
         JSON
       </button>
     </div>

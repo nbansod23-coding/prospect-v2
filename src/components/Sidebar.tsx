@@ -188,7 +188,7 @@ export default function Sidebar({
             }}
             className={[
               "flex items-center rounded-xl text-white transition",
-              "hover:opacity-90",
+              "hover:brightness-110 active:scale-[0.98]",
               collapsed ? "h-11 w-11 justify-center" : "h-[48px] w-full gap-3 px-4",
             ].join(" ")}
           >
@@ -211,7 +211,7 @@ export default function Sidebar({
                   className={[
                     "flex h-[48px] w-full items-center rounded-xl transition",
                     active
-                      ? "bg-white/[0.13] text-white shadow-sm"
+                      ? "bg-white/[0.13] text-white shadow-sm hover:bg-white/[0.18]"
                       : "text-white/65 hover:bg-white/[0.07] hover:text-white",
                     collapsed ? "justify-center" : "gap-3 px-3",
                   ].join(" ")}
@@ -277,7 +277,7 @@ export default function Sidebar({
                         className={[
                           "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition",
                           chat.id === activeChatId
-                            ? "bg-white/10 text-white"
+                            ? "bg-white/10 text-white hover:bg-white/[0.16]"
                             : "text-white/55 hover:bg-white/5 hover:text-white",
                         ].join(" ")}
                       >
