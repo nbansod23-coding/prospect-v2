@@ -16,6 +16,7 @@ import {
 } from "@/lib/chatStorage";
 import { generateMockResponse, type MockAIResult } from "@/lib/mockAI";
 import { useUIStore } from "@/store/uiStore";
+import { useListStore } from "@/store/listStore";
 
 const SUGGESTIONS = [
   { label: "SaaS companies in India",       icon: Building2,        query: "Find 10 SaaS companies in India" },
@@ -34,8 +35,10 @@ export default function ChatPage() {
   const [activeResult, setActiveResult] = useState<MockAIResult | null>(null);
   const [loading, setLoading] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const addList = useListStore((state) => state.addList);
 
   useEffect(() => {
     const idParam = searchParams.get("id");
@@ -124,12 +127,31 @@ export default function ChatPage() {
 
       try {
         const result = await generateMockResponse(q);
+
+        const newList = {
+          id: Date.now(),
+          name: chat.title,
+          rows: result.prospects.length,
+          createdAt: new Date().toISOString().split("T")[0],
+          status: "ready" as const,
+          source: "AI Search",
+          interested: 0,
+          notInterested: 0,
+          callBack: 0,
+          noAnswer: 0,
+          notCalled: result.prospects.length,
+          
+        };
+
+        addList(newList);
+
         const aiMsg: StoredMessage = {
           id: crypto.randomUUID(),
           role: "assistant",
           content: result.summary,
           createdAt: Date.now(),
         };
+      
         chat = { ...chat, messages: [...chat.messages, aiMsg], result, updatedAt: Date.now() };
         saveChat(chat);
         setChats(getChats());

@@ -17,6 +17,7 @@ import ResultsCard from "@/components/ResultsCard";
 import { generateMockResponse } from "@/lib/mockAI";
 import type { Prospect } from "@/data/mockData";
 import DownloadBox from "@/components/DownloadBox";
+import { useListStore } from "@/store/listStore";
 
 /* ── Types ── */
 type ChatMessage = {
@@ -52,7 +53,8 @@ export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
-
+  
+  const addList = useListStore((state) => state.addList);
   const activeChat = chats.find((c) => c.id === activeChatId);
   const messages = activeChat?.messages ?? [];
   const hasMessages = messages.length > 0;
@@ -124,15 +126,44 @@ export default function HomePage() {
       await new Promise((r) => setTimeout(r, 1400));
       const result = await generateMockResponse(query);
 
-      const aiMsg: ChatMessage = {
+      const prospects = result.prospects ?? [];
+      const prospectCount = prospects.length;
+
+      if (prospectCount > 0) {
+        addList({
+          id: Date.now(),
+
+         // User's search becomes the list name
+          name: query,
+
+         // Number of generated prospects
+          rows: prospectCount,
+
+          createdAt: new Date().toISOString().split("T")[0],
+
+          status: "ready",
+
+          source: "AI Search",
+
+        // Newly generated list has no call activity yet
+          interested: 0,
+          notInterested: 0,
+          callBack: 0,
+          noAnswer: 0,
+
+        // Initially every contact is not called
+          notCalled: prospectCount,
+          called: 0,
+          prospects,
+      });
+    }
+
+    const aiMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: result.summary,
-        prospects: result.prospects,
+        prospects,
         query,
-        industry: result.industry,
-        location: result.location,
-        reasoning: `I understood your request as: "${query}". I searched for matching prospects and organized the most relevant results for you.`,
       };
 
       setChats((prev) =>
