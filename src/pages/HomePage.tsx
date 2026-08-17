@@ -280,7 +280,23 @@ export default function HomePage() {
                     key={label}
                     type="button"
                     onClick={() => handleSubmit(query)}
-                    className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:border-[#6687dc]/40 hover:bg-[#f0f5ff] hover:text-[#17345e] hover:shadow-md active:scale-[0.98] active:bg-[#e0e8ff]"
+                    // className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm shadow-sm transition hover:border-[#6687dc]/40 hover:bg-[#f0f5ff] hover:text-[#17345e] hover:shadow-md active:scale-[0.98] active:bg-[#e0e8ff]"
+                    className="
+                        group
+                        flex items-center gap-2
+                        rounded-full
+                        border
+                        bg-white/55
+                        px-4 py-2.5
+                        text-sm
+                        shadow-[0_2px_10px_rgba(23,52,94,0.06)]
+                        backdrop-blur-md
+                        transition-all
+                        duration-200
+                        hover:-translate-y-[1px]
+                        hover:bg-white/80
+                        hover:shadow-[0_6px_18px_rgba(23,52,94,0.10)]
+                        "
                     style={{
                       borderColor: "var(--color-border)",
                       color: "var(--color-text-body)",
@@ -317,7 +333,7 @@ export default function HomePage() {
                         "rounded-2xl px-4 py-3 text-sm leading-relaxed",
                         msg.role === "user"
                           ? "max-w-[min(72%,560px)] rounded-br-sm text-white shadow-sm"
-                          : "min-w-0 flex-1 rounded-bl-sm border bg-white shadow-sm",
+                          : "min-w-0 flex-1 rounded-2xl border bg-white/55 backdrop-blur-md shadow-sm",
                       ].join(" ")}
                       style={
                         msg.role === "user"
@@ -379,13 +395,19 @@ export default function HomePage() {
                           industry={msg.industry}
                           location={msg.location}
                           selectedIds={
-                            msg.id === lastAssistantMessage?.id ? selectedIds : undefined
+                            msg.id === lastAssistantMessage?.id
+                              ? selectedIds
+                              : undefined
                           }
                           onToggleSelect={
-                            msg.id === lastAssistantMessage?.id ? toggleSelect : undefined
+                            msg.id === lastAssistantMessage?.id
+                              ? toggleSelect
+                              : undefined
                           }
                           onToggleAll={
-                            msg.id === lastAssistantMessage?.id ? toggleAll : undefined
+                            msg.id === lastAssistantMessage?.id
+                              ? toggleAll
+                              : undefined
                           }
                         />
                       </div>
@@ -431,7 +453,8 @@ export default function HomePage() {
           style={{
             borderColor: "var(--color-border-light)",
             background: "rgba(255,255,255,0.8)",
-            backdropFilter: "blur(12px)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
           }}
         >
           <div className="px-4 pt-3 pb-3 sm:px-6 sm:pb-4 lg:px-8">
