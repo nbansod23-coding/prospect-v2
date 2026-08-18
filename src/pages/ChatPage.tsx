@@ -140,6 +140,7 @@ export default function ChatPage() {
           callBack: 0,
           noAnswer: 0,
           notCalled: result.prospects.length,
+          called: 0,
           
         };
 

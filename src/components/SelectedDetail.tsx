@@ -1,4 +1,4 @@
-import { FileText, Sparkles, Mail, Phone, X } from "lucide-react";
+import { Sparkles, Mail, Phone, X } from "lucide-react";
 
 import type { MockList } from "@/data/mockList";
 import type { Contact } from "@/types/contact";
@@ -18,7 +18,6 @@ export function SelectedDetail({
   onStartCampaign: () => void;
   onClose: () => void;
 }) {
-    console.log(contacts.map((c)=>c.callFeedback))
   return (
     <div
       className="mt-8 overflow-hidden rounded-2xl shadow-sm"
@@ -298,19 +297,6 @@ export function SelectedDetail({
                     <span className="truncate">{contact.email}</span>
                   </div>
                 </div>
-                {/* Intrestes/ Non Intrested*/}
-
-                <div className="hidden min-w-[280px] flex-col items-start gap-1 lg:flex">
-                  <div
-                    className="flex items-center gap-2 text-sm"
-                    style={{
-                      color: "var(--color-text-body)",
-                    }}
-                  >
-                    <span>{contact.callFeedback}</span>
-                  </div>
-                </div>
-
                 {/* CALL STATUS */}
 
                 <div className="hidden min-w-[90px] text-right sm:block">
@@ -320,9 +306,7 @@ export function SelectedDetail({
                       color: "var(--color-text-faint)",
                     }}
                   >
-                    {contact.status === "not_called"
-                      ? "called"
-                      : contact.status.replace("_", " ")}
+                    {contact.callFeedback}
                   </span>
                 </div>
               </div>

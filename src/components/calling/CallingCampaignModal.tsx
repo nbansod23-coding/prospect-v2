@@ -123,7 +123,6 @@
 //   return "noAnswer";
 // }
 
-
 // export default function CallingCampaignModal({
 //   listId,
 //   listName,
@@ -1152,10 +1151,9 @@ interface CallingCampaignModalProps {
    NORMALIZE CALL OUTCOME
    ───────────────────────────────────────────── */
 
-function getCallOutcome(result: unknown): keyof Omit<
-  CallOutcomeSummary,
-  "called"
-> {
+function getCallOutcome(
+  result: unknown,
+): keyof Omit<CallOutcomeSummary, "called"> {
   const normalized = String(result ?? "")
     .trim()
     .toLowerCase()
@@ -1175,10 +1173,7 @@ function getCallOutcome(result: unknown): keyof Omit<
     return "notInterested";
   }
 
-  if (
-    normalized.includes("call_back") ||
-    normalized.includes("callback")
-  ) {
+  if (normalized.includes("call_back") || normalized.includes("callback")) {
     return "callBack";
   }
 
@@ -1206,33 +1201,21 @@ export default function CallingCampaignModal({
   onClose,
   onComplete,
 }: CallingCampaignModalProps) {
-  const startCampaign = useCampaignStore(
-    (state) => state.startCampaign,
-  );
+  const startCampaign = useCampaignStore((state) => state.startCampaign);
 
-  const setLeadResult = useCampaignStore(
-    (state) => state.setLeadResult,
-  );
+  const setLeadResult = useCampaignStore((state) => state.setLeadResult);
 
-  const setCurrentLead = useCampaignStore(
-    (state) => state.setCurrentLead,
-  );
+  const setCurrentLead = useCampaignStore((state) => state.setCurrentLead);
 
   const setCampaignStatus = useCampaignStore(
     (state) => state.setCampaignStatus,
   );
 
-  const updateList = useListStore(
-    (state) => state.updateList,
-  );
+  const updateList = useListStore((state) => state.updateList);
 
-  const [step, setStep] = useState<CampaignState>(
-    "select",
-  );
+  const [step, setStep] = useState<CampaignState>("select");
 
-  const [agentId, setAgentId] = useState<string | null>(
-    null,
-  );
+  const [agentId, setAgentId] = useState<string | null>(null);
 
   const [scheduledTime, setScheduledTime] = useState("");
 
@@ -1240,36 +1223,29 @@ export default function CallingCampaignModal({
 
   const [callProgress, setCallProgress] = useState(0);
 
-  const [currentContact, setCurrentContact] =
-    useState<Contact | null>(null);
+  const [currentContact, setCurrentContact] = useState<Contact | null>(null);
 
   const [error, setError] = useState("");
 
-  const [outcomes, setOutcomes] =
-    useState<CallOutcomeSummary>({
-      interested: 0,
-      notInterested: 0,
-      callBack: 0,
-      noAnswer: 0,
-      called: 0,
-    });
+  const [outcomes, setOutcomes] = useState<CallOutcomeSummary>({
+    interested: 0,
+    notInterested: 0,
+    callBack: 0,
+    noAnswer: 0,
+    called: 0,
+  });
 
   const stopRequested = useRef(false);
+  const loadingTimerRef = useRef<number | null>(null);
+  const loadingStartedAtRef = useRef<number>(0);
 
-  const agent = AGENTS.find(
-    (item) => item.id === agentId,
-  );
+  const agent = AGENTS.find((item) => item.id === agentId);
 
-  const isBusy =
-    step === "loading" ||
-    step === "running";
+  const isBusy = step === "loading" || step === "running";
 
   const progress =
     contacts.length > 0
-      ? Math.round(
-          (callProgress / contacts.length) *
-            100,
-        )
+      ? Math.round((callProgress / contacts.length) * 100)
       : 0;
 
   function closeIfAllowed() {
@@ -1289,33 +1265,30 @@ export default function CallingCampaignModal({
       Helper
     ---------------------------------------*/
   function getOutcomeKey(result: string) {
-  const normalized = String(result)
-    .toLowerCase()
-    .replace(/[-_\s]/g, "");
+    const normalized = String(result)
+      .toLowerCase()
+      .replace(/[-_\s]/g, "");
 
-  if (
-    normalized.includes("interested") &&
-    !normalized.includes("notinterested")
-  ) {
-    return "interested";
+    if (
+      normalized.includes("interested") &&
+      !normalized.includes("notinterested")
+    ) {
+      return "interested";
+    }
+
+    if (
+      normalized.includes("notinterested") ||
+      normalized.includes("not interested")
+    ) {
+      return "notInterested";
+    }
+
+    if (normalized.includes("callback") || normalized.includes("call back")) {
+      return "callBack";
+    }
+
+    return "noAnswer";
   }
-
-  if (
-    normalized.includes("notinterested") ||
-    normalized.includes("not interested")
-  ) {
-    return "notInterested";
-  }
-
-  if (
-    normalized.includes("callback") ||
-    normalized.includes("call back")
-  ) {
-    return "callBack";
-  }
-
-  return "noAnswer";
-}  
 
   async function initializeAndCall() {
     if (!agent) {
@@ -1324,9 +1297,7 @@ export default function CallingCampaignModal({
     }
 
     if (contacts.length === 0) {
-      setError(
-        "No contacts are available for this campaign.",
-      );
+      setError("No contacts are available for this campaign.");
       return;
     }
 
@@ -1334,10 +1305,10 @@ export default function CallingCampaignModal({
 
     setError("");
 
-    setAiProgress(0);
     setCallProgress(0);
 
     setCurrentContact(null);
+    setAiProgress(0);
 
     /*
      * Reset previous campaign outcomes.
@@ -1351,15 +1322,31 @@ export default function CallingCampaignModal({
     });
 
     setStep("loading");
+    loadingStartedAtRef.current = Date.now();
+
+    if (loadingTimerRef.current) {
+      window.clearInterval(loadingTimerRef.current);
+    }
+
+    loadingTimerRef.current = window.setInterval(() => {
+      const elapsed = Date.now() - loadingStartedAtRef.current;
+      const targetProgress = Math.min(100, Math.floor((elapsed / 10000) * 100));
+
+      setAiProgress((current) => {
+        if (stopRequested.current) {
+          return current;
+        }
+
+        return Math.max(current, targetProgress);
+      });
+    }, 100);
 
     try {
-      await loadLocalModel(
-        (progressValue) => {
-          if (!stopRequested.current) {
-            setAiProgress(progressValue);
-          }
-        },
-      );
+      await loadLocalModel((progressValue) => {
+        if (!stopRequested.current) {
+          setAiProgress((current) => Math.max(current, progressValue));
+        }
+      });
 
       if (stopRequested.current) {
         setCampaignStatus("cancelled");
@@ -1367,12 +1354,7 @@ export default function CallingCampaignModal({
         return;
       }
 
-      startCampaign(
-        listId,
-        agent.id,
-        agent.name,
-        contacts,
-      );
+      startCampaign(listId, agent.id, agent.name, contacts);
 
       updateList(listId, {
         status: "ready",
@@ -1396,11 +1378,7 @@ export default function CallingCampaignModal({
         called: 0,
       };
 
-      for (
-        let i = 0;
-        i < contacts.length;
-        i += 1
-      ) {
+      for (let i = 0; i < contacts.length; i += 1) {
         if (stopRequested.current) {
           setCampaignStatus("cancelled");
           setCurrentContact(null);
@@ -1413,9 +1391,7 @@ export default function CallingCampaignModal({
         setCurrentLead(i);
         setCurrentContact(contact);
 
-        console.log(
-          `🤖 Calling ${contact.name} at ${contact.phone}`,
-        );
+        console.log(`🤖 Calling ${contact.name} at ${contact.phone}`);
 
         /*
          * Simulate AI phone call.
@@ -1449,16 +1425,12 @@ export default function CallingCampaignModal({
         /*
          * Store result in campaign store.
          */
-        setLeadResult(
-          contact.id,
-          result,
-        );
+        setLeadResult(contact.id, result);
 
         /*
          * Determine the outcome category.
          */
-        const outcome =
-          getCallOutcome(result);
+        const outcome = getCallOutcome(result);
 
         /*
          * Increment the correct category.
@@ -1479,14 +1451,9 @@ export default function CallingCampaignModal({
 
         setCallProgress(i + 1);
 
-        console.log(
-          `📞 ${contact.name} → ${result}`,
-        );
+        console.log(`📞 ${contact.name} → ${result}`);
 
-        console.log(
-          "📊 Campaign outcomes:",
-          campaignOutcomes,
-        );
+        console.log("📊 Campaign outcomes:", campaignOutcomes);
       }
 
       /*
@@ -1502,14 +1469,9 @@ export default function CallingCampaignModal({
         ...campaignOutcomes,
       });
 
-      console.log(
-        "✅ Campaign completed",
-      );
+      console.log("✅ Campaign completed");
 
-      console.log(
-        "📊 Final campaign outcomes:",
-        campaignOutcomes,
-      );
+      console.log("📊 Final campaign outcomes:", campaignOutcomes);
 
       /*
        * Send the final outcome summary to ListsPage.
@@ -1535,23 +1497,34 @@ export default function CallingCampaignModal({
           campaignOutcomes.noAnswer,
       });
     } catch (callError) {
-      console.error(
-        "Calling process failed:",
-        callError,
-      );
+      console.error("Calling process failed:", callError);
 
-      setError(
-        "The calling process failed. Please try again.",
-      );
+      setError("The calling process failed. Please try again.");
 
       setCurrentContact(null);
 
       setStep("configure");
+    } finally {
+      if (loadingTimerRef.current) {
+        window.clearInterval(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+
+      if (!stopRequested.current) {
+        setAiProgress((current) => Math.max(current, 100));
+      }
     }
   }
 
   function stopCalling() {
     stopRequested.current = true;
+
+    if (loadingTimerRef.current) {
+      window.clearInterval(loadingTimerRef.current);
+      loadingTimerRef.current = null;
+    }
+
+    loadingStartedAtRef.current = 0;
 
     setCampaignStatus("cancelled");
 
@@ -1562,9 +1535,7 @@ export default function CallingCampaignModal({
 
   function scheduleCampaign() {
     if (!scheduledTime) {
-      setError(
-        "Please select a date and time.",
-      );
+      setError("Please select a date and time.");
 
       return;
     }
@@ -1614,16 +1585,13 @@ export default function CallingCampaignModal({
         style={{
           borderColor: "var(--color-border)",
         }}
-        onClick={(event) =>
-          event.stopPropagation()
-        }
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
         <div
           className="relative overflow-hidden border-b px-6 py-5"
           style={{
-            borderColor:
-              "var(--color-border-light)",
+            borderColor: "var(--color-border-light)",
             background:
               "linear-gradient(135deg, var(--color-accent-bg), var(--color-surface))",
           }}
@@ -1631,8 +1599,7 @@ export default function CallingCampaignModal({
           <div
             className="absolute -right-12 -top-16 h-36 w-36 rounded-full opacity-30 blur-3xl"
             style={{
-              background:
-                "var(--color-primary)",
+              background: "var(--color-primary)",
             }}
           />
 
@@ -1641,15 +1608,11 @@ export default function CallingCampaignModal({
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
                 style={{
-                  background:
-                    "var(--color-primary)",
+                  background: "var(--color-primary)",
                 }}
               >
                 {step === "running" ? (
-                  <Phone
-                    size={20}
-                    className="animate-pulse"
-                  />
+                  <Phone size={20} className="animate-pulse" />
                 ) : (
                   <Sparkles size={20} />
                 )}
@@ -1659,8 +1622,7 @@ export default function CallingCampaignModal({
                 <h2
                   className="truncate text-base font-semibold"
                   style={{
-                    color:
-                      "var(--color-text-heading)",
+                    color: "var(--color-text-heading)",
                   }}
                 >
                   Start Campaign
@@ -1669,8 +1631,7 @@ export default function CallingCampaignModal({
                 <p
                   className="mt-0.5 truncate text-xs"
                   style={{
-                    color:
-                      "var(--color-text-muted)",
+                    color: "var(--color-text-muted)",
                   }}
                 >
                   {listName} · {contacts.length} contacts
@@ -1684,8 +1645,7 @@ export default function CallingCampaignModal({
               onClick={closeIfAllowed}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-35"
               style={{
-                color:
-                  "var(--color-text-faint)",
+                color: "var(--color-text-faint)",
               }}
               aria-label="Close campaign"
             >
@@ -1703,16 +1663,14 @@ export default function CallingCampaignModal({
                 <Bot
                   size={17}
                   style={{
-                    color:
-                      "var(--color-primary)",
+                    color: "var(--color-primary)",
                   }}
                 />
 
                 <p
                   className="text-sm font-semibold"
                   style={{
-                    color:
-                      "var(--color-text-heading)",
+                    color: "var(--color-text-heading)",
                   }}
                 >
                   Choose your calling agent
@@ -1724,15 +1682,11 @@ export default function CallingCampaignModal({
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      chooseAgent(item.id)
-                    }
+                    onClick={() => chooseAgent(item.id)}
                     className="group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#b8ccee] hover:bg-[#f4f7ff] hover:shadow-sm"
                     style={{
-                      borderColor:
-                        "var(--color-border)",
-                      background:
-                        "var(--color-bg)",
+                      borderColor: "var(--color-border)",
+                      background: "var(--color-bg)",
                     }}
                   >
                     <div
@@ -1748,8 +1702,7 @@ export default function CallingCampaignModal({
                       <p
                         className="text-sm font-semibold"
                         style={{
-                          color:
-                            "var(--color-text-heading)",
+                          color: "var(--color-text-heading)",
                         }}
                       >
                         {item.name}
@@ -1758,8 +1711,7 @@ export default function CallingCampaignModal({
                       <p
                         className="mt-1 text-xs leading-5"
                         style={{
-                          color:
-                            "var(--color-text-muted)",
+                          color: "var(--color-text-muted)",
                         }}
                       >
                         {item.desc}
@@ -1770,8 +1722,7 @@ export default function CallingCampaignModal({
                       size={15}
                       className="shrink-0 transition group-hover:translate-x-0.5"
                       style={{
-                        color:
-                          "var(--color-text-faint)",
+                        color: "var(--color-text-faint)",
                       }}
                     />
                   </button>
@@ -1787,17 +1738,14 @@ export default function CallingCampaignModal({
                 <div
                   className="mb-5 flex items-center gap-3 rounded-2xl border p-4"
                   style={{
-                    borderColor:
-                      "var(--color-border-light)",
-                    background:
-                      "var(--color-bg)",
+                    borderColor: "var(--color-border-light)",
+                    background: "var(--color-bg)",
                   }}
                 >
                   <div
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
                     style={{
-                      background:
-                        agent.color,
+                      background: agent.color,
                     }}
                   >
                     {agent.avatar}
@@ -1807,8 +1755,7 @@ export default function CallingCampaignModal({
                     <p
                       className="text-sm font-semibold"
                       style={{
-                        color:
-                          "var(--color-text-heading)",
+                        color: "var(--color-text-heading)",
                       }}
                     >
                       {agent.name}
@@ -1817,8 +1764,7 @@ export default function CallingCampaignModal({
                     <p
                       className="mt-1 text-xs"
                       style={{
-                        color:
-                          "var(--color-text-muted)",
+                        color: "var(--color-text-muted)",
                       }}
                     >
                       {agent.desc}
@@ -1827,13 +1773,10 @@ export default function CallingCampaignModal({
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setStep("select")
-                    }
+                    onClick={() => setStep("select")}
                     className="shrink-0 text-xs font-medium transition hover:underline"
                     style={{
-                      color:
-                        "var(--color-primary)",
+                      color: "var(--color-primary)",
                     }}
                   >
                     Change
@@ -1845,8 +1788,7 @@ export default function CallingCampaignModal({
                 <p
                   className="text-sm font-semibold"
                   style={{
-                    color:
-                      "var(--color-text-body)",
+                    color: "var(--color-text-body)",
                   }}
                 >
                   How do you want to trigger calls?
@@ -1855,10 +1797,8 @@ export default function CallingCampaignModal({
                 <span
                   className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium"
                   style={{
-                    background:
-                      "var(--color-accent-bg)",
-                    color:
-                      "var(--color-primary)",
+                    background: "var(--color-accent-bg)",
+                    color: "var(--color-primary)",
                   }}
                 >
                   <Users size={12} />
@@ -1873,19 +1813,15 @@ export default function CallingCampaignModal({
                   onClick={initializeAndCall}
                   className="group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-[#9db7ed] hover:bg-[#f4f7ff] hover:shadow-sm"
                   style={{
-                    borderColor:
-                      "var(--color-border)",
-                    background:
-                      "var(--color-bg)",
+                    borderColor: "var(--color-border)",
+                    background: "var(--color-bg)",
                   }}
                 >
                   <div
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
                     style={{
-                      background:
-                        "var(--color-accent-bg)",
-                      color:
-                        "var(--color-primary)",
+                      background: "var(--color-accent-bg)",
+                      color: "var(--color-primary)",
                     }}
                   >
                     <Play size={18} />
@@ -1895,8 +1831,7 @@ export default function CallingCampaignModal({
                     <p
                       className="text-sm font-semibold"
                       style={{
-                        color:
-                          "var(--color-text-heading)",
+                        color: "var(--color-text-heading)",
                       }}
                     >
                       Trigger Immediately
@@ -1905,8 +1840,7 @@ export default function CallingCampaignModal({
                     <p
                       className="mt-1 text-xs"
                       style={{
-                        color:
-                          "var(--color-text-muted)",
+                        color: "var(--color-text-muted)",
                       }}
                     >
                       Start calling all selected contacts right now.
@@ -1916,8 +1850,7 @@ export default function CallingCampaignModal({
                   <span
                     className="text-xs font-medium"
                     style={{
-                      color:
-                        "var(--color-primary)",
+                      color: "var(--color-primary)",
                     }}
                   >
                     Start
@@ -1928,20 +1861,16 @@ export default function CallingCampaignModal({
                 <div
                   className="rounded-2xl border p-4"
                   style={{
-                    borderColor:
-                      "var(--color-border)",
-                    background:
-                      "var(--color-bg)",
+                    borderColor: "var(--color-border)",
+                    background: "var(--color-bg)",
                   }}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
                       style={{
-                        background:
-                          "var(--color-accent-bg)",
-                        color:
-                          "var(--color-primary)",
+                        background: "var(--color-accent-bg)",
+                        color: "var(--color-primary)",
                       }}
                     >
                       <CalendarDays size={18} />
@@ -1951,8 +1880,7 @@ export default function CallingCampaignModal({
                       <p
                         className="text-sm font-semibold"
                         style={{
-                          color:
-                            "var(--color-text-heading)",
+                          color: "var(--color-text-heading)",
                         }}
                       >
                         Schedule Calls
@@ -1961,8 +1889,7 @@ export default function CallingCampaignModal({
                       <p
                         className="mt-1 text-xs"
                         style={{
-                          color:
-                            "var(--color-text-muted)",
+                          color: "var(--color-text-muted)",
                         }}
                       >
                         Pick a date and time.
@@ -1974,17 +1901,11 @@ export default function CallingCampaignModal({
                     <input
                       type="datetime-local"
                       value={scheduledTime}
-                      onChange={(event) =>
-                        setScheduledTime(
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => setScheduledTime(event.target.value)}
                       className="min-w-0 flex-1 rounded-xl border bg-white px-3 py-2.5 text-sm outline-none"
                       style={{
-                        borderColor:
-                          "var(--color-border)",
-                        color:
-                          "var(--color-text-body)",
+                        borderColor: "var(--color-border)",
+                        color: "var(--color-text-body)",
                       }}
                     />
 
@@ -1994,8 +1915,7 @@ export default function CallingCampaignModal({
                       onClick={scheduleCampaign}
                       className="rounded-xl px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                       style={{
-                        background:
-                          "var(--color-primary)",
+                        background: "var(--color-primary)",
                       }}
                     >
                       Schedule
@@ -2017,10 +1937,7 @@ export default function CallingCampaignModal({
             <div>
               <div className="mb-5 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
-                  <Loader2
-                    size={20}
-                    className="animate-spin"
-                  />
+                  <Loader2 size={20} className="animate-spin" />
                 </div>
 
                 <div>
@@ -2039,14 +1956,14 @@ export default function CallingCampaignModal({
                   className="h-full rounded-full transition-all duration-300"
                   style={{
                     width: `${aiProgress}%`,
-                    background:
-                      "var(--color-primary)",
+                    background: "var(--color-primary)",
                   }}
                 />
               </div>
 
               <p className="mt-3 text-center text-xs text-slate-500">
-                Please wait. Calling controls will appear when the model is ready.
+                Please wait. Calling controls will appear when the model is
+                ready.
               </p>
 
               <button
@@ -2071,8 +1988,7 @@ export default function CallingCampaignModal({
                     <p
                       className="text-sm font-semibold"
                       style={{
-                        color:
-                          "var(--color-text-heading)",
+                        color: "var(--color-text-heading)",
                       }}
                     >
                       Calling in progress
@@ -2082,8 +1998,7 @@ export default function CallingCampaignModal({
                   <p
                     className="mt-1 text-xs"
                     style={{
-                      color:
-                        "var(--color-text-muted)",
+                      color: "var(--color-text-muted)",
                     }}
                   >
                     {callProgress} of {contacts.length} calls completed
@@ -2093,8 +2008,7 @@ export default function CallingCampaignModal({
                 <span
                   className="text-lg font-bold"
                   style={{
-                    color:
-                      "var(--color-primary)",
+                    color: "var(--color-primary)",
                   }}
                 >
                   {progress}%
@@ -2106,8 +2020,7 @@ export default function CallingCampaignModal({
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${progress}%`,
-                    background:
-                      "var(--color-primary)",
+                    background: "var(--color-primary)",
                   }}
                 />
               </div>
@@ -2116,32 +2029,25 @@ export default function CallingCampaignModal({
                 <div
                   className="mt-5 rounded-2xl border p-5"
                   style={{
-                    borderColor:
-                      "var(--color-border-light)",
-                    background:
-                      "var(--color-accent-bg)",
+                    borderColor: "var(--color-border-light)",
+                    background: "var(--color-accent-bg)",
                   }}
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
                       style={{
-                        color:
-                          "var(--color-primary)",
+                        color: "var(--color-primary)",
                       }}
                     >
-                      <Phone
-                        size={20}
-                        className="animate-pulse"
-                      />
+                      <Phone size={20} className="animate-pulse" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <p
                         className="text-sm font-semibold"
                         style={{
-                          color:
-                            "var(--color-text-heading)",
+                          color: "var(--color-text-heading)",
                         }}
                       >
                         Calling {currentContact.name}
@@ -2150,12 +2056,10 @@ export default function CallingCampaignModal({
                       <p
                         className="mt-1 truncate text-xs"
                         style={{
-                          color:
-                            "var(--color-text-muted)",
+                          color: "var(--color-text-muted)",
                         }}
                       >
-                        {currentContact.company} ·{" "}
-                        {currentContact.phone}
+                        {currentContact.company} · {currentContact.phone}
                       </p>
                     </div>
                   </div>
@@ -2183,10 +2087,8 @@ export default function CallingCampaignModal({
               <div
                 className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl"
                 style={{
-                  background:
-                    "var(--color-accent-bg)",
-                  color:
-                    "var(--color-primary)",
+                  background: "var(--color-accent-bg)",
+                  color: "var(--color-primary)",
                 }}
               >
                 <CalendarDays size={30} />
@@ -2195,8 +2097,7 @@ export default function CallingCampaignModal({
               <h3
                 className="mt-4 text-base font-semibold"
                 style={{
-                  color:
-                    "var(--color-text-heading)",
+                  color: "var(--color-text-heading)",
                 }}
               >
                 Campaign Scheduled
@@ -2205,24 +2106,19 @@ export default function CallingCampaignModal({
               <p
                 className="mt-2 text-sm"
                 style={{
-                  color:
-                    "var(--color-text-muted)",
+                  color: "var(--color-text-muted)",
                 }}
               >
                 {agent?.name} will start at{" "}
                 <span className="font-medium">
-                  {new Date(
-                    scheduledTime,
-                  ).toLocaleString()}
+                  {new Date(scheduledTime).toLocaleString()}
                 </span>
                 .
               </p>
 
               <button
                 type="button"
-                onClick={() =>
-                  setStep("cancelled")
-                }
+                onClick={() => setStep("cancelled")}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-medium text-red-500 transition hover:bg-red-100"
               >
                 <X size={15} />
@@ -2241,8 +2137,7 @@ export default function CallingCampaignModal({
               <h3
                 className="mt-4 text-base font-semibold"
                 style={{
-                  color:
-                    "var(--color-text-heading)",
+                  color: "var(--color-text-heading)",
                 }}
               >
                 Calling Stopped
@@ -2251,8 +2146,7 @@ export default function CallingCampaignModal({
               <p
                 className="mt-2 text-sm"
                 style={{
-                  color:
-                    "var(--color-text-muted)",
+                  color: "var(--color-text-muted)",
                 }}
               >
                 The calling process has been stopped safely.
@@ -2263,8 +2157,7 @@ export default function CallingCampaignModal({
                 onClick={startNewCampaign}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium text-white transition hover:opacity-90"
                 style={{
-                  background:
-                    "var(--color-primary)",
+                  background: "var(--color-primary)",
                 }}
               >
                 <Play size={15} />
@@ -2276,8 +2169,7 @@ export default function CallingCampaignModal({
                 onClick={onClose}
                 className="mt-2 w-full rounded-xl py-2.5 text-xs font-medium"
                 style={{
-                  color:
-                    "var(--color-text-muted)",
+                  color: "var(--color-text-muted)",
                 }}
               >
                 Close

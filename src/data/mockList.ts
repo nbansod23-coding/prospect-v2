@@ -62,7 +62,7 @@ export const mockLists: MockList[] = [
     name: "Healthcare Decision Makers",
     rows: 10,
     createdAt: "2024-12-15",
-    status: "processing",
+    status: "ready",
     source: "CSV Upload",
 
     interested: 6,

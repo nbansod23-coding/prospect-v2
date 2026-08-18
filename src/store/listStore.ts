@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { mockLists, type MockList } from "@/data/mockList";
+import { deriveInitialListMetrics } from "@/lib/listMetrics";
 
 type ListStore = {
   lists: MockList[];
@@ -13,7 +14,10 @@ type ListStore = {
 };
 
 export const useListStore = create<ListStore>((set) => ({
-  lists: mockLists,
+  lists: mockLists.map((list) => ({
+    ...list,
+    ...deriveInitialListMetrics(list),
+  })),
 
   addList: (list) =>
     set((state) => ({

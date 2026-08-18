@@ -1349,6 +1349,8 @@ import { SelectedDetail } from "@/components/SelectedDetail";
 import Sidebar from "@/components/Sidebar";
 import type { MockList } from "@/data/mockList";
 import { mockContacts } from "@/data/mockContacts";
+import { deriveListTotals } from "@/lib/listMetrics";
+import { useCampaignStore } from "@/store/campaignStore";
 import { useListStore } from "@/store/listStore";
 import { useUIStore } from "@/store/uiStore";
 import type { Contact } from "@/types/contact";
@@ -1377,7 +1379,10 @@ function getContactsForList(
       listId: list.id,
       name: prospect.contactName || `Contact ${index + 1}`,
       company: prospect.company || list.name,
+      designation: prospect.contactTitle || "",
       phone: prospect.contactPhone || "",
+      email: prospect.contactEmail || "",
+      callFeedback: "Not Answered",
       status: "not_called",
     }));
   }
@@ -1397,9 +1402,45 @@ function getContactsForList(
     listId: list.id,
     name: `Contact ${index + 1}`,
     company: list.name,
+    designation: "",
     phone: `+91 90000 ${String(index + 1).padStart(5, "0")}`,
+    email: "",
+    callFeedback: "Not Answered",
     status: "not_called",
   }));
+}
+
+function resultToContactStatus(
+  result: string | undefined,
+): Contact["status"] {
+  switch (result) {
+    case "interested":
+      return "interested";
+    case "not_interested":
+      return "not_interested";
+    case "call_back":
+      return "call_back";
+    case "no_answer":
+      return "no_answer";
+    default:
+      return "not_called";
+  }
+}
+
+function resultToCallFeedback(
+  result: string | undefined,
+): Contact["callFeedback"] {
+  switch (result) {
+    case "interested":
+      return "Interested";
+    case "not_interested":
+      return "Not Interested";
+    case "call_back":
+      return "Call Back";
+    case "no_answer":
+    default:
+      return "Not Answered";
+  }
 }
 
 /* ─────────────────────────────────────────────
@@ -1429,6 +1470,9 @@ export default function ListsPage() {
   const addList = useListStore((state) => state.addList);
   const removeList = useListStore((state) => state.removeList);
   const updateList = useListStore((state) => state.updateList);
+  const activeCampaign = useCampaignStore(
+    (state) => state.activeCampaign,
+  );
 
   const [contacts] = useState<Contact[]>(mockContacts);
 
@@ -1464,6 +1508,32 @@ export default function ListsPage() {
       list.name.toLowerCase().includes(q),
     );
   }, [lists, search]);
+
+  const totals = useMemo(() => deriveListTotals(lists), [lists]);
+
+  const selectedCampaignResults =
+    activeCampaign?.listId === selected?.id
+      ? activeCampaign?.results
+      : null;
+
+  const selectedListContacts = useMemo(() => {
+    if (!selected) {
+      return [];
+    }
+
+    const baseContacts = getContactsForList(selected, contacts);
+
+    return baseContacts.map((contact) => {
+      const result =
+        selectedCampaignResults?.[contact.id];
+
+      return {
+        ...contact,
+        status: resultToContactStatus(result),
+        callFeedback: resultToCallFeedback(result),
+      };
+    });
+  }, [contacts, selected, selectedCampaignResults]);
 
   /* ─────────────────────────────────────────────
      OPEN CAMPAIGN
@@ -1539,7 +1609,6 @@ export default function ListsPage() {
         totalContacts - campaignCalled,
       ),
 
-      isCalled: true,
       status: "ready",
     });
 
@@ -1718,37 +1787,23 @@ export default function ListsPage() {
             {[
               {
                 label: "Total Lists",
-                value: lists.length,
+                value: totals.totalLists,
                 color:
                   "var(--color-primary)",
               },
               {
                 label: "Total Contacts",
-                value: lists.reduce(
-                  (total, list) =>
-                    total + list.rows,
-                  0,
-                ),
+                value: totals.totalContacts,
                 color: "#22c55e",
               },
               {
                 label: "Interested",
-                value: lists.reduce(
-                  (total, list) =>
-                    total +
-                    (list.interested || 0),
-                  0,
-                ),
+                value: totals.interested,
                 color: "#22c55e",
               },
               {
                 label: "Not Called",
-                value: lists.reduce(
-                  (total, list) =>
-                    total +
-                    (list.notCalled || 0),
-                  0,
-                ),
+                value: totals.notCalled,
                 color:
                   "var(--color-text-faint)",
               },
@@ -1997,7 +2052,11 @@ export default function ListsPage() {
                     {isSelected && (
                       <SelectedDetail
                         list={list}
-                        contacts={listContacts}
+                        contacts={
+                          list.id === selected?.id
+                            ? selectedListContacts
+                            : listContacts
+                        }
                         selectedContacts={
                           selectedContacts
                         }
@@ -2058,10 +2117,14 @@ export default function ListsPage() {
         <CallingCampaignModal
           listId={selected.id}
           listName={selected.name}
-          contacts={getContactsForList(
-            selected,
-            contacts,
-          )}
+          contacts={
+            selected.id === selected?.id
+              ? selectedListContacts
+              : getContactsForList(
+                  selected,
+                  contacts,
+                )
+          }
           onClose={() => {
             setShowAgent(false);
             setSelected(null);
@@ -2169,9 +2232,7 @@ function ListCard({
     failed: "#ef4444",
   };
 
-  const isCalled = Boolean(
-    list.isCalled,
-  );
+  const isCalled = (list.called || 0) > 0;
 
   /* ─────────────────────────────────────────
      LIST VIEW
@@ -2228,31 +2289,6 @@ function ListCard({
               {list.source}
             </p>
           </div>
-
-          {/* Already Called Message */}
-
-          {isCalled && (
-            <div className="hidden text-right sm:block">
-              <p
-                className="text-[11px] font-semibold"
-                style={{
-                  color: "#16a34a",
-                }}
-              >
-                This List is Already called
-              </p>
-
-              <p
-                className="mt-0.5 text-[10px]"
-                style={{
-                  color:
-                    "var(--color-text-faint)",
-                }}
-              >
-                {list.called} contacts called
-              </p>
-            </div>
-          )}
 
           {/* Status */}
 
@@ -2325,33 +2361,7 @@ function ListCard({
           </div>
         </div>
 
-        {/* Mobile Already Called Message */}
-
-        {isCalled && (
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 sm:hidden">
-            <div>
-              <p className="text-[11px] font-semibold text-green-700">
-                This List is Already called
-              </p>
-
-              <p className="text-[10px] text-green-600">
-                {list.called} contacts called
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onStartCampaign();
-              }}
-              className="flex items-center gap-1 rounded-lg bg-green-600 px-2.5 py-1.5 text-[10px] font-medium text-white"
-            >
-              <Play size={10} />
-              Call Again
-            </button>
-          </div>
-        )}
+        {/* Mobile already-called state is conveyed by the status chip and button label */}
       </div>
     );
   }
@@ -2798,11 +2808,6 @@ function UploadModal({
       prospects: [],
 
       called: 0,
-
-      /*
-       * New list has never been called.
-       */
-      isCalled: false,
     };
 
     onAddList(newList);
